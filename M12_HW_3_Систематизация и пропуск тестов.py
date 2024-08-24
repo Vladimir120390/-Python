@@ -53,7 +53,7 @@ class Tournament:
 
 # Тесты для Runner
 class RunnerTest(unittest.TestCase):
-    is_frozen = False  # Установите True, чтобы заморозить тесты
+    is_frozen = False  
 
     @skip_if_frozen
     def test_run(self):
@@ -76,7 +76,7 @@ class RunnerTest(unittest.TestCase):
 
 # Тесты для Tournament
 class TournamentTest(unittest.TestCase):
-    is_frozen = True  # Установите True, чтобы заморозить тесты
+    is_frozen = True  
 
     @skip_if_frozen
     def test_first_tournament(self):
