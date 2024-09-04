@@ -4,6 +4,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, state
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
 
@@ -13,7 +14,12 @@ bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
+kb = ReplyKeyboardMarkup()
+button = KeyboardButton(text='Расчитать')
+button2 = KeyboardButton(text='Информация')
 
+kb.add(button)
+kb.add(button2)
 
 class UserState(StatesGroup):
     age = State()
@@ -22,20 +28,22 @@ class UserState(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start_message(message):
-     await message.answer('Привет! Я бот помогающий твоему здоровью.')
+     await message.answer('Привет! Я бот помогающий твоему здоровью.', reply_markup=kb)
 
-@dp.message_handler(Command("Calories"))
+
+
+@dp.message_handler(commands= ["Расчитать"])
 async def start_command(message: types.Message):
-    await message.answer("Введите 'Calories' для начала.")
+    await message.answer("Введите 'Calories' для начала", reply_markup=kb)
 
 
-@dp.message_handler(Command("help"))
-async def help_command(message: types.Message):
+@dp.message_handler(commands=['Информация'])
+async def help_message(message: types.Message):
     await message.answer("Введите 'Calories' для начала процесса расчета нормы калорий. "
-                         "Следуйте инструкциям, чтобы ввести свой возраст, рост и вес.")
+                         "Следуйте инструкциям, чтобы ввести свой возраст, рост и вес.", reply_markup=kb)
 
 
-@dp.message_handler(lambda message: message.text == 'Calories')
+@dp.message_handler(lambda message: message.text == 'Расчитать')
 async def set_age(message: types.Message):
     await UserState.age.set()
     await message.answer("Введите свой возраст:")
