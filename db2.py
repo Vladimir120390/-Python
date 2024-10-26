@@ -33,6 +33,8 @@ with sqlite3.connect("not_telegram.db") as connection:
     for i in range(1, 11, 3):  # Индексы 1, 4, 7, 10 (всего 10 записей)
         cursor.execute("DELETE FROM Users WHERE id = ?", (i,))
 
+
+
     
     connection.commit()
 
@@ -44,3 +46,20 @@ with sqlite3.connect("not_telegram.db") as connection:
 for row in rows:
     username, email, age, balance = row
     print(f"Имя: {username} | Почта: {email} | Возраст: {age} | Баланс: {balance}")
+
+
+cursor.execute("DELETE FROM Users WHERE username = ?", ("newuser",))
+connection.commit()
+
+cursor.execute("DELETE FROM Users WHERE username = ?", ("User6",))
+connection.commit()
+
+cursor.execute("SELECT COUNT(*) FROM Users")
+total1 = cursor.fetchone()[0]
+print(total1)
+
+cursor.execute("SELECT SUM(balance) FROM Users")
+all_balance = cursor.fetchone()[0]
+print(all_balance/total1)
+
+connection.close()
