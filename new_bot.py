@@ -1,5 +1,6 @@
+import asyncio
 import logging
-import time
+
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -8,12 +9,16 @@ from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from crud_functions import initiate_db, get_all_products, populate_db
 
 logging.basicConfig(level=logging.INFO)
 
 from new_config import *
 from new_keyboard import *
 import new_text
+from new_admin import *
+from crud_functions import *
+
 
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
@@ -28,32 +33,55 @@ class UserState(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start_message(message: types.Message):
-    await message.answer(new_text.start,reply_markup=kb)
+    await message.answer(new_text.start,reply_markup=main_menu_keyboards())
 
 @dp.message_handler(lambda message: message.text == 'Информация')
 async def help_message(message: types.Message):
-    # await message.answer(new_text.Информация, reply_markup=kb)
-    with open('files_new/Продукт1.png', "rb") as img:
-        await message.answer_photo(img, new_text.Информация, reply_markup=kb)
+    with open('files_update/bot.png', "rb") as img:
+        await message.answer_photo(img, new_text.Информация, reply_markup=main_menu_keyboards())
+
+
 
 @dp.message_handler(lambda message: message.text == 'Рассчитать')
 async def main_menu(message: types.Message):
-    await message.answer(new_text.Рассчитать, reply_markup=inline_kb)
+    await message.answer(new_text.Рассчитать, reply_markup=inline_keyboards())
+
 
 @dp.message_handler(lambda message: message.text == 'Купить')
 async def buy_menu(message: types.Message):
-    await message.answer("Выберите продукт для покупки:", reply_markup=inline_kb_products)
+    products = get_all_products()
+    await message.answer("Доступные товары:")
+    for product in products:
+        caption = f"Название: {product[1]}\nОписание: {product[2]}\nЦена: {product[3]} р."
+        await message.answer_photo(photo=open(product[4], "rb"), caption=caption)
+    inline_kb = create_product_keyboard(products)
+    await message.answer("Выберите продукт, нажав на кнопку ниже:", reply_markup=inline_kb)
+
+
+@dp.callback_query_handler(lambda call: call.data.startswith('buy_product'))
+async def show_product_details(call: types.CallbackQuery):
+    product_id = int(call.data.split('_')[-1])
+    product = get_all_products()[product_id - 1]
+
+    # Отправляем изображение и описание продукта
+    await call.message.answer_photo(photo=open(product[4], "rb"),
+                                    caption=f"Название: {product[1]}\nОписание: {product[2]}\nЦена: {product[3]} р.")
+    await call.message.answer("Товар добавлен в корзину.")
+    await call.message.answer("Вы успешно приобрели продукт! Спасибо за покупку!")
+    await call.answer()
+
+
 
 @dp.callback_query_handler(lambda call: call.data == 'formulas')
 async def get_formulas(call: types.CallbackQuery):
     await call.message.answer(new_text.formulas)
-    await call.answer()  # Убираем индикатор загрузки
+    await call.answer()
 
 @dp.callback_query_handler(lambda call: call.data == 'calories')
 async def set_age(call: types.CallbackQuery):
     await UserState.age.set()
     await call.message.answer(new_text.calories)
-    await call.answer()  # Убираем индикатор загрузки
+    await call.answer()
 
 @dp.message_handler(state=UserState.age)
 async def set_growth(message: types.Message, state: FSMContext):
@@ -95,54 +123,7 @@ async def send_calories(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-@dp.callback_query_handler(lambda call: call.data == 'buy_product1')
-async def buy_product1(call: types.CallbackQuery):
-    await call.message.answer(new_text.buy_product1)
-    time.sleep(1)
-    await call.message.answer("Товар добавлен в корзину.")
-    time.sleep(1)
-    await call.message.answer_photo(photo=open('files_new/Продукт1.png', "rb"),
-                                    caption="Вы успешно приобрели продукт! Спасибо за покупку!")
-    await call.answer()
-
-
-@dp.callback_query_handler(lambda call: call.data == 'buy_product2')
-async def buy_product2(call: types.CallbackQuery):
-    await call.message.answer(new_text.buy_product2)
-    time.sleep(1)
-    await call.message.answer("Товар добавлен в корзину.")
-    time.sleep(1)
-    await call.message.answer_photo(photo=open('files_new/Продукт2.png', "rb"),
-                                    caption="Вы успешно приобрели продукт! Спасибо за покупку!")
-    await call.answer()
-
-@dp.callback_query_handler(lambda call: call.data == 'buy_product3')
-async def buy_product3(call: types.CallbackQuery):
-    await call.message.answer(new_text.buy_product3)
-    time.sleep(1)
-    await call.message.answer("Товар добавлен в корзину.")
-    time.sleep(1)
-    await call.message.answer_photo(photo=open('files_new/Продукт3.png', "rb"),
-                                    caption="Вы успешно приобрели продукт! Спасибо за покупку!")
-    await call.answer()
-
-
-@dp.callback_query_handler(lambda call: call.data == 'buy_product4')
-async def buy_product4(call: types.CallbackQuery):
-    await call.message.answer(new_text.buy_product4)
-    time.sleep(1)
-    await call.message.answer("Товар добавлен в корзину.")
-    time.sleep(1)
-    await call.message.answer_photo(photo=open('files_new/Продукт4.png', "rb"),
-                                    caption="Вы успешно приобрелипродукт! Спасибо за покупку!")
-    await call.answer()
-
-
-
-@dp.callback_query_handler(lambda call: call.data == 'back_to_main_menu')
-async def back_to_main_menu(call: types.CallbackQuery):
-    await call.message.answer("Возвращаемся в главное меню...", reply_markup=kb)
-    await call.answer()
-
 if __name__ == '__main__':
+    initiate_db()
+    populate_db()
     executor.start_polling(dp, skip_updates=True)
