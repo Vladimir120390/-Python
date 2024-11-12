@@ -3,10 +3,12 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 # Создание клавиатуры меню
 def main_menu_keyboards ():
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    button_register = KeyboardButton(text="Регистрация")
     button_calculate = KeyboardButton(text='Рассчитать')
     button_info = KeyboardButton(text='Информация')
     button_buy = KeyboardButton(text="Купить")
-    kb.add(button_calculate, button_info, button_buy)
+
+    kb.add(button_register, button_info,button_calculate, button_buy)
     return kb
 
 

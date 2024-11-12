@@ -2,28 +2,27 @@ import sqlite3
 
 
 # crud_functions.py
-
-cart = []  # Глобальная переменная для хранения товаров в корзине
-
-def add_to_cart(product_title):
-    cart.append(product_title)
-
-def get_cart_items():
-    return cart
-
-def clear_cart():
-    cart.clear()
+#
+# cart = []  # Глобальная переменная для хранения товаров в корзине
+#
+# def add_to_cart(product_title):
+#     cart.append(product_title)
+#
+# def get_cart_items():
+#     return cart
+#
+# def clear_cart():
+#     cart.clear()
 
 
 
 
 def initiate_db():
-    conn = sqlite3.connect('products.db')
-    cursor = conn.cursor()
+    conn1 = sqlite3.connect('products.db')
+    cursor1 = conn1.cursor()
 
-    cursor.execute('DROP TABLE IF EXISTS Products')
-
-    cursor.execute('''
+    cursor1.execute('DROP TABLE IF EXISTS Products')
+    cursor1.execute('''
         CREATE TABLE IF NOT EXISTS Products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL UNIQUE,
@@ -31,12 +30,46 @@ def initiate_db():
             price INTEGER NOT NULL,
             image_path TEXT NOT NULL
         )
+        ''')
+
+    conn1.commit()
+    conn1.close()
+
+    conn2 = sqlite3.connect('users.db')
+    cursor2 = conn2.cursor()
+    cursor2.execute('''
+        CREATE TABLE IF NOT EXISTS Users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            age INTEGER NOT NULL,
+            balance INTEGER NOT NULL DEFAULT 1000
+        )
     ''')
 
+    conn2.commit()
+    conn2.close()
 
+
+def add_user(username, email, age):
+    conn = sqlite3.connect('Users.db')
+    cursor = conn.cursor()
+
+    cursor.execute('INSERT INTO Users (username, email, age) VALUES (?, ?, ?)', (username, email, age))
 
     conn.commit()
     conn.close()
+
+
+def is_included(username):
+    conn = sqlite3.connect('Users.db')
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM Users WHERE username = ?', (username,))
+    user = cursor.fetchone()
+
+    conn.close()
+    return user is not None
 
 
 
@@ -52,9 +85,6 @@ def get_all_products():
     finally:
         conn.close()
     return products
-
-
-
 
 
 def is_db_populated():

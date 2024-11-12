@@ -31,9 +31,57 @@ class UserState(StatesGroup):
     growth = State()
     weight = State()
 
+class RegistrationState(StatesGroup):
+    username = State()
+    email = State()
+    age = State()
+
 @dp.message_handler(commands=['start'])
 async def start_message(message: types.Message):
     await message.answer(new_text.start,reply_markup=main_menu_keyboards())
+
+
+@dp.message_handler(lambda message: message.text == 'Регистрация')
+async def sing_up(message: types.Message):
+    await message.answer("Введите имя пользователя (только латинский алфавит):")
+    await RegistrationState.username.set()
+
+
+@dp.message_handler(state=RegistrationState.username)
+async def set_username(message: types.Message, state: FSMContext):
+    username = message.text
+
+    if is_included(username):
+        await message.answer("Пользователь существует, введите другое имя.")
+    else:
+        await state.update_data(username=username)
+        await message.answer("Введите свой email:")
+        await RegistrationState.email.set()
+
+
+@dp.message_handler(state=RegistrationState.email)
+async def set_email(message: types.Message, state: FSMContext):
+    email = message.text
+    await state.update_data(email=email)
+    await message.answer("Введите свой возраст:")
+    await RegistrationState.age.set()
+
+
+@dp.message_handler(state=RegistrationState.age)
+async def set_age(message: types.Message, state: FSMContext):
+    age = message.text
+    data = await state.get_data()
+
+    username = data['username']
+    email = data['email']
+
+    # Добавляем пользователя в базу данных
+    add_user(username, email, age)
+
+    await message.answer("Регистрация завершена! Добро пожаловать!")
+    await state.finish()
+
+
 
 @dp.message_handler(lambda message: message.text == 'Информация')
 async def help_message(message: types.Message):
